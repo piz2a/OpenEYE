@@ -6,9 +6,9 @@ import Template from "./Template";
 
 // navigator history에서 삭제시켜야 한다.
 
-function Complete({ navigation }: NativeStackScreenProps<RootStackParamList, 'Complete'>): ReactElement {
+function Complete({ navigation }: NativeStackScreenProps<RootStackParamList, 'Complete'>, setFooterProps: Function): ReactElement {
     return (
-        <Template btnL={{}} btnC={{}} btnR={{}}>
+        <Template setFooterProps={setFooterProps} btnL={{}} btnC={{}} btnR={{}}>
             <Text style={{color: "#fff"}}>Complete</Text>
             <Button title="Take another" onPress={navigation.popToTop}/>
         </Template>

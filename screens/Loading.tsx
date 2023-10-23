@@ -7,7 +7,7 @@ import Template from "./Template";
 
 // navigator history에서 삭제시켜야 한다.
 
-function Loading({ navigation }: NativeStackScreenProps<RootStackParamList, 'Loading'>): ReactElement {
+function Loading({ navigation }: NativeStackScreenProps<RootStackParamList, 'Loading'>, setFooterProps: Function): ReactElement {
     useEffect(() => {
         navigation.dispatch(CommonActions.reset({
             index: 1,
@@ -19,7 +19,7 @@ function Loading({ navigation }: NativeStackScreenProps<RootStackParamList, 'Loa
     });
 
     return (
-        <Template btnL={{}} btnC={{}} btnR={{}}>
+        <Template setFooterProps={setFooterProps} btnL={{}} btnC={{}} btnR={{}}>
             <Text style={{color: "#fff"}}>Loading...</Text>
         </Template>
     );

@@ -4,9 +4,10 @@ import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 
-function Preview({ navigation }: NativeStackScreenProps<RootStackParamList, 'Preview'>): ReactElement {
+function Preview({ navigation }: NativeStackScreenProps<RootStackParamList, 'Preview'>, setFooterProps: Function): ReactElement {
     return (
-        <Template btnL={{sourceFileName: "Retake", onPress: () => navigation.popToTop()}}
+        <Template setFooterProps={setFooterProps}
+                  btnL={{sourceFileName: "Retake", onPress: () => navigation.popToTop()}}
                   btnC={{sourceFileName: "Save", onPress: () => navigation.navigate('Saving')}}
                   btnR={{sourceFileName: "Edit", onPress: () => navigation.navigate('EyeSelection')}}>
             <Text style={{color: "#fff"}}>Preview</Text>
