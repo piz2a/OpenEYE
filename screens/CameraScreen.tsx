@@ -5,7 +5,7 @@ import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {Camera, CameraType} from "expo-camera";
 
-function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Camera'>, setFooterProps: Function, setImageUriList: Function): ReactElement {
+function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Camera'>): ReactElement {
     const camera = useRef<Camera>(null);
     const [type, setType] = useState(CameraType.back);
     const [permission, requestPermission] = Camera.useCameraPermissions();
@@ -16,7 +16,7 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
     }, [permission]);
 
     const takePicture = async () => {
-        if (camera.current && permission?.granted && ready) {
+        if (camera.current/* && permission?.granted && ready*/) {
             setTimeout(async () => {
                 let newImageUriList: string[] = [];
                 if (!camera.current) return;
@@ -26,8 +26,7 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
                     console.log(i);
                 }
                 console.log(newImageUriList);
-                setImageUriList(newImageUriList);
-                navigation.navigate('Preview');
+                navigation.navigate('Loading', {uris: newImageUriList});
             }, 0);
         } else {
             if (!permission?.granted)
@@ -37,8 +36,7 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
     const toggleCameraType = () => setType(current => (current === CameraType.back ? CameraType.front : CameraType.back))
 
     return (
-        <Template setFooterProps={setFooterProps}
-                  btnL={{sourceFileName: "Recent"}}
+        <Template btnL={{sourceFileName: "Recent"}}
                   btnC={{sourceFileName: "Take", onPress: () => takePicture() /*navigation.navigate('Loading')}*/}}
                   btnR={{sourceFileName: "Turn", onPress: toggleCameraType}}>
             {

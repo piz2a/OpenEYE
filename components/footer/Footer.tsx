@@ -1,5 +1,6 @@
 import {View, StyleSheet} from "react-native";
 import {CenterFooterButton, FooterButtonProps, SideFooterButton} from "./FooterButton";
+import {RefObject, useCallback, useEffect, useState} from "react";
 
 interface FooterProps {
     btnL: FooterButtonProps,
@@ -7,7 +8,15 @@ interface FooterProps {
     btnR: FooterButtonProps,
 }
 
-function Footer({ btnL, btnC, btnR }: FooterProps) {
+function Footer(/*{ propsRef }: { propsRef: RefObject<FooterProps> }*/{ btnL, btnC, btnR }: FooterProps) {
+    /*
+    const [tempState, updateTempState] = useState(0);
+    const updateFooter = () => updateTempState(tempState + 1);
+    useEffect(() => {
+        console.log(propsRef.current, tempState);
+        updateFooter();
+    }, [propsRef.current]);
+     */
     return (
         <View style={styles.container}>
             <SideFooterButton {...btnL}/>

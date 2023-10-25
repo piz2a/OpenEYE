@@ -7,7 +7,7 @@ import {CommonActions} from "@react-navigation/native";
 
 // navigator history에서 삭제시켜야 한다.
 
-function Saving({ navigation }: NativeStackScreenProps<RootStackParamList, 'Saving'>, setFooterProps: Function): ReactElement {
+function Saving({ navigation }: NativeStackScreenProps<RootStackParamList, 'Saving'>): ReactElement {
     useEffect(() => {
         navigation.dispatch(CommonActions.reset({
             index: 2,
@@ -20,7 +20,7 @@ function Saving({ navigation }: NativeStackScreenProps<RootStackParamList, 'Savi
     });
 
     return (
-        <Template setFooterProps={setFooterProps} btnL={{}} btnC={{}} btnR={{}}>
+        <Template btnL={{}} btnC={{}} btnR={{}}>
             <Text style={{color: "#fff"}}>Saving...</Text>
         </Template>
     );

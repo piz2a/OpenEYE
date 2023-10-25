@@ -5,7 +5,7 @@ import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {CommonActions} from "@react-navigation/native";
 
-function OutFocusing({ navigation }: NativeStackScreenProps<RootStackParamList, 'OutFocusing'>, setFooterProps: Function): ReactElement {
+function OutFocusing({ navigation }: NativeStackScreenProps<RootStackParamList, 'OutFocusing'>): ReactElement {
     const backToPreview = () => navigation.dispatch(CommonActions.reset({
         index: 1,
         routes: [
@@ -15,8 +15,7 @@ function OutFocusing({ navigation }: NativeStackScreenProps<RootStackParamList, 
     }));
 
     return (
-        <Template setFooterProps={setFooterProps}
-                  btnL={{sourceFileName: "Back", onPress: () => navigation.goBack()}}
+        <Template btnL={{sourceFileName: "Back", onPress: () => navigation.goBack()}}
                   btnC={{sourceFileName: "Done", onPress: backToPreview}}
                   btnR={{/*처음 설정으로 복귀?*/}}>
             <Text style={{color: "#fff"}}>Out Focusing</Text>
