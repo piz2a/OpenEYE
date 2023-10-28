@@ -15,9 +15,9 @@ function OutFocusing({ navigation }: NativeStackScreenProps<RootStackParamList, 
     }));
 
     return (
-        <Template btnL={{sourceFileName: "Back", onPress: () => navigation.goBack()}}
-                  btnC={{sourceFileName: "Done", onPress: backToPreview}}
-                  btnR={{/*처음 설정으로 복귀?*/}}>
+        <Template btnL={{source: require('../assets/buttons/21.png')}}
+                  btnC={{source: require('../assets/buttons/16.png'), onPress: backToPreview}}
+                  btnR={{source: require('../assets/buttons/20.png')}}>
             <Text style={{color: "#fff"}}>Out Focusing</Text>
         </Template>
     );

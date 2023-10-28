@@ -6,9 +6,9 @@ import Template from "./Template";
 
 function Preview({ navigation }: NativeStackScreenProps<RootStackParamList, 'Preview'>): ReactElement {
     return (
-        <Template btnL={{sourceFileName: "Retake", onPress: () => navigation.popToTop()}}
-                  btnC={{sourceFileName: "Save", onPress: () => navigation.navigate('Saving')}}
-                  btnR={{sourceFileName: "Edit", onPress: () => navigation.navigate('EyeSelection')}}>
+        <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => navigation.popToTop()}}
+                  btnC={{source: require('../assets/buttons/9.png'), onPress: () => navigation.navigate('Saving')}}
+                  btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate('EyeSelection')}}>
             <Text style={{color: "#fff"}}>Preview</Text>
         </Template>
     );

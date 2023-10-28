@@ -6,9 +6,7 @@ import Template from "./Template";
 
 function EyeSelection({ navigation }: NativeStackScreenProps<RootStackParamList, 'EyeSelection'>): ReactElement {
     return (
-        <Template btnL={{sourceFileName: "Back", onPress: () => navigation.goBack()}}
-                  btnC={{sourceFileName: "Next", onPress: () => navigation.navigate('OutFocusing')}}
-                  btnR={{/*처음 설정으로 복귀?*/}}>
+        <Template btnC={{source: require('../assets/buttons/16.png'), onPress: () => navigation.navigate('OutFocusing')}}>
             <Text style={{color: "#fff"}}>Select Eyes</Text>
         </Template>
     );

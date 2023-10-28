@@ -148,11 +148,11 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
     const toggleCameraType = () => setType(current => (current === CameraType.back ? CameraType.front : CameraType.back));
 
     return (
-        <Template btnL={{source: require('../assets/buttons/info.png'), style: {width: 160 / 3, height: 160 / 3}}}
-                  btnC={{source: require('../assets/buttons/5.png'), style: {width: 192 / 3, height: 192 / 3}, onPress: () => {
+        <Template btnL={{source: require('../assets/buttons/info.png')}}
+                  btnC={{source: require('../assets/buttons/5.png'), onPress: () => {
                       if (!taking) takePicture();
                   }}}
-                  btnR={{source: require('../assets/buttons/6.png'), style: {width: 160 / 3, height: 160 / 3}, onPress: () => {
+                  btnR={{source: require('../assets/buttons/6.png'), onPress: () => {
                       if (!taking && timerNum === null) toggleCameraType();
                   }}}>
             <Camera ref={camera}

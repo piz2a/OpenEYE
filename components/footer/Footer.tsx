@@ -2,18 +2,18 @@ import {View, StyleSheet} from "react-native";
 import {CenterFooterButton, FooterButtonProps, SideFooterButton} from "./FooterButton";
 
 interface FooterProps {
-    btnL: FooterButtonProps
-    btnC: FooterButtonProps
-    btnR: FooterButtonProps
+    btnL?: FooterButtonProps
+    btnC?: FooterButtonProps
+    btnR?: FooterButtonProps
     style?: any
 }
 
 function Footer({ btnL, btnC, btnR, style = {} }: FooterProps) {
     return (
         <View style={{...styles.container, ...style}}>
-            <SideFooterButton {...btnL}/>
-            <CenterFooterButton {...btnC}/>
-            <SideFooterButton {...btnR}/>
+            {btnL ? <SideFooterButton {...btnL}/> : <></>}
+            {btnC ? <CenterFooterButton {...btnC}/> : <></>}
+            {btnR ? <SideFooterButton {...btnR}/> : <></>}
         </View>
     );
 }

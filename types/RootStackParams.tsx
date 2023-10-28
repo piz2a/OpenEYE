@@ -1,5 +1,4 @@
 export type RootStackParamList = {
-    Welcome: undefined;
     Camera: undefined;
     Loading: { uris: string[] };
     Preview: undefined;

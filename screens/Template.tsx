@@ -14,7 +14,10 @@ function Template({ btnL, btnC, btnR, children, style = {}, mainStyle = {}, foot
             <View style={{...styles.main, ...mainStyle}}>
                 {children}
             </View>
-            <Footer btnL={btnL} btnC={btnC} btnR={btnR} style={footerStyle}/>
+            <Footer btnL={{...btnL, style: {width: 160 / 3, height: 160 / 3}}}
+                    btnC={{...btnC, style: {width: 192 / 3, height: 192 / 3}}}
+                    btnR={{...btnR, style: {width: 160 / 3, height: 160 / 3}}}
+                    style={footerStyle}/>
         </SafeAreaView>
     )
 }
@@ -25,7 +28,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: "#dbbbee",
-        // maxHeight: '80%',
     },
     main: {
         flex: 1,
