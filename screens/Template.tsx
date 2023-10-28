@@ -4,15 +4,17 @@ import Footer, {FooterProps} from "../components/footer/Footer";
 
 interface TemplateProps extends FooterProps {
     children?: ReactNode
+    mainStyle?: any
+    footerStyle?: any
 }
 
-function Template({ btnL, btnC, btnR, children }: TemplateProps) {
+function Template({ btnL, btnC, btnR, children, style = {}, mainStyle = {}, footerStyle = {} }: TemplateProps) {
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.main}>
+        <SafeAreaView style={{...styles.container, ...style}}>
+            <View style={{...styles.main, ...mainStyle}}>
                 {children}
             </View>
-            <Footer btnL={btnL} btnC={btnC} btnR={btnR}/>
+            <Footer btnL={btnL} btnC={btnC} btnR={btnR} style={footerStyle}/>
         </SafeAreaView>
     )
 }

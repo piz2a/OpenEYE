@@ -2,14 +2,15 @@ import {View, StyleSheet} from "react-native";
 import {CenterFooterButton, FooterButtonProps, SideFooterButton} from "./FooterButton";
 
 interface FooterProps {
-    btnL: FooterButtonProps,
-    btnC: FooterButtonProps,
-    btnR: FooterButtonProps,
+    btnL: FooterButtonProps
+    btnC: FooterButtonProps
+    btnR: FooterButtonProps
+    style?: any
 }
 
-function Footer({ btnL, btnC, btnR }: FooterProps) {
+function Footer({ btnL, btnC, btnR, style = {} }: FooterProps) {
     return (
-        <View style={styles.container}>
+        <View style={{...styles.container, ...style}}>
             <SideFooterButton {...btnL}/>
             <CenterFooterButton {...btnC}/>
             <SideFooterButton {...btnR}/>
@@ -21,7 +22,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         width: "100%",
-        maxHeight: "20%",
+        maxHeight: "16%",
         flexDirection: "row",
         justifyContent: "space-around",
         alignItems: "center",

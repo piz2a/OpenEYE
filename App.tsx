@@ -1,4 +1,4 @@
-import React, {ReactElement, useRef, useState} from 'react';
+import React, {ReactElement, useCallback} from 'react';
 import {NavigationContainer} from "@react-navigation/native";
 import {createStackNavigator} from "@react-navigation/stack";
 import {RootStackParamList} from "./types/RootStackParams";
@@ -9,22 +9,17 @@ import EyeSelection from "./screens/EyeSelection";
 import Saving from "./screens/Saving";
 import Complete from "./screens/Complete";
 import OutFocusing from "./screens/OutFocusing";
-import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Footer, {FooterProps} from "./components/footer/Footer";
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import {View} from "react-native";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-function App(): ReactElement {
-    /*
-    const footerPropsRef = useRef<FooterProps>({btnL: {}, btnC: {}, btnR: {}});
-    const {footer, updateFooter} = Footer({propsRef: footerPropsRef})
+function App(): ReactElement | null {
+    const [fontsLoaded, fontError] = useFonts({
+        'Pretendard-Bold': require('./assets/fonts/Pretendard-Bold.otf')
+    });
 
-    const setFooterProps = (footerProps: FooterProps) => {
-        footerPropsRef.current = footerProps;
-        updateFooter();
-    };
-    const [imageUriList, setImageUriList] = useState<string[] | null>(null);
-     */
     return (
         <>
             <NavigationContainer>
