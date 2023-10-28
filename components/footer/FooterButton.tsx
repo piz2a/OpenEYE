@@ -1,7 +1,9 @@
-import {Button, GestureResponderEvent, Image, StyleSheet, Text, TouchableOpacity} from "react-native";
+import {GestureResponderEvent, Image, StyleSheet, Text, TouchableOpacity} from "react-native";
+import {useEffect, useState} from "react";
 
 interface FooterButtonProps {
-    sourceFileName?: string
+    source?: any,
+    style?: any,
     onPress?: (event: GestureResponderEvent) => void
 }
 
@@ -10,11 +12,18 @@ interface SuperFooterButtonProps extends FooterButtonProps {
     color: string
 }
 
-function FooterButton({ sourceFileName, onPress }: SuperFooterButtonProps) {
+function FooterButton({ source, onPress, style = {} }: SuperFooterButtonProps) {
+    /*
+    const [style, setStyle] = useState({});
+    useEffect(() => {
+        Image.getSize(source, (width, height) => {
+            setStyle({width: width / 3, height: height / 3});
+        });
+    }, []);
+     */
     return (
         <TouchableOpacity activeOpacity={0.5} onPress={onPress ? onPress : () => {}}>
-            <Image source={require('../../assets/favicon.png')}/>
-            <Text style={styles.text}>{sourceFileName}</Text>
+            <Image source={source} style={style}/>
         </TouchableOpacity>
     );
 }

@@ -1,15 +1,103 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
-import {Image, StyleSheet, Text, View, Alert} from "react-native";
+import {
+    Animated,
+    StyleSheet,
+    View,
+    Alert,
+    TouchableOpacity,
+    GestureResponderEvent,
+    Easing
+} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {Camera, CameraType} from "expo-camera";
 
+interface TopButtonProps {
+    source: any,
+    onPress?: (event: GestureResponderEvent) => void,
+    marginLeft?: number,
+    style?: any,
+}
+
+function TopButton({ style, source, onPress, marginLeft = (140 - 112) / 3 }: TopButtonProps) {
+    return (
+        <TouchableOpacity activeOpacity={1} onPress={onPress ? onPress : () => {}}>
+            <Animated.Image source={source} style={{width: 112 / 3, height: 112 / 3, marginLeft: marginLeft, ...style}}/>
+        </TouchableOpacity>
+    );
+}
+
+function TopButtonWrapper() {
+    const shownRef = useRef<boolean | null>(false);
+
+    const widthAnim = useRef(new Animated.Value(0)).current;
+
+    const spinAnim = useRef(new Animated.Value(1)).current;
+    const spin = spinAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '90deg']
+    })
+
+    const buttonSources = {
+        '16:9': require(`../assets/buttons/2.png`),
+        'full': require(`../assets/buttons/2-2.png`),
+        'flashOn': require(`../assets/buttons/3.png`),
+        'flashOff': require(`../assets/buttons/3-2.png`),
+        'timerOff': require(`../assets/buttons/4.png`),
+        'timerOn': require(`../assets/buttons/4-2.png`),
+    };
+
+    const [orientationButton, setOrientationButton] = useState(false);
+    const [flashButton, setFlashButton] = useState(false);
+    const [timerButton, setTimerButton] = useState(false);
+
+    const showTopButtons = () => {
+        const duration = 300;
+        if (shownRef.current === null) return;  // Ignore button press when top buttons are moving
+        Animated.timing(widthAnim, {
+            toValue: shownRef.current ? 0 : 420 / 3,
+            duration: duration,
+            useNativeDriver: false,
+        }).start();
+        Animated.timing(spinAnim, {
+            toValue: shownRef.current ? 1 : 0,
+            duration: duration,
+            easing: Easing.linear,
+            useNativeDriver: false,
+        }).start();
+        const temp = shownRef.current;
+        shownRef.current = null;
+        setTimeout(() => {
+            shownRef.current = !temp;
+        }, duration);
+    };
+
+    return (
+        <View style={styles.topButtonWrapper}>
+            <Animated.View style={{
+                ...styles.topButtons,
+                width: widthAnim,
+            }}>
+                <TopButton source={buttonSources[orientationButton ? 'full' : '16:9']} onPress={() => setOrientationButton(!orientationButton)}/>
+                <TopButton source={buttonSources[flashButton ? 'flashOn': 'flashOff']} onPress={() => setFlashButton(!flashButton)}/>
+                <TopButton source={buttonSources[timerButton ? 'timerOn' : 'timerOff']} onPress={() => setTimerButton(!timerButton)}/>
+            </Animated.View>
+            <TopButton source={require(`../assets/buttons/1.png`)}
+                       marginLeft={0}
+                       style={{transform: [{rotate: spin}]}}
+                       onPress={showTopButtons}/>
+        </View>
+    );
+}
+
 function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Camera'>): ReactElement {
     const camera = useRef<Camera>(null);
     const [type, setType] = useState(CameraType.back);
     const [permission, requestPermission] = Camera.useCameraPermissions();
-    const [ready, setReady] = useState(false);
+
+    // const windowWidth = Dimensions.get('window').width;
+    // const windowHeight = Dimensions.get('window').height;
 
     useEffect(() => {
         if (!permission?.granted) requestPermission();
@@ -36,11 +124,13 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
     const toggleCameraType = () => setType(current => (current === CameraType.back ? CameraType.front : CameraType.back))
 
     return (
-        <Template btnL={{sourceFileName: "Recent"}}
-                  btnC={{sourceFileName: "Take", onPress: () => takePicture() /*navigation.navigate('Loading')}*/}}
-                  btnR={{sourceFileName: "Turn", onPress: toggleCameraType}}>
+        <Template btnL={{source: require('../assets/buttons/7.png'), style: {width: 160 / 3, height: 160 / 3}}}
+                  btnC={{source: require('../assets/buttons/5.png'), style: {width: 192 / 3, height: 192 / 3}, onPress: () => takePicture()}}
+                  btnR={{source: require('../assets/buttons/6.png'), style: {width: 160 / 3, height: 160 / 3}, onPress: toggleCameraType}}>
+            <Camera ref={camera} style={styles.camera} type={type} ratio={'3:4'}/>
+            <TopButtonWrapper/>
+            {/*<Text style={{color: "#f00"}}>{windowWidth} {windowHeight}</Text>*/}
             {
-                <Camera ref={camera} onCameraReady={() => setReady(true)} style={styles.camera} type={type} ratio={'4:3'}/>
                 /*
                 (() => {
                     if (!camera.current)
@@ -52,13 +142,6 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
                     return
                 })()
                  */
-                /*
-                <View style={{flex: 1}}>
-                    <Image source={{uri: imageUriList[0]}} style={styles.image}/>
-                    <Image source={{uri: imageUriList[1]}} style={styles.image}/>
-                    <Image source={{uri: imageUriList[2]}} style={styles.image}/>
-                </View>
-                 */
             }
         </Template>
     );
@@ -67,15 +150,25 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
 const styles = StyleSheet.create({
     camera: {
         flex: 1,
-        aspectRatio: 4/3,
+        aspectRatio: 3/4,
         width: "100%",
     },
-    image: {
-        flex: 1,
-        aspectRatio: 1,
-        width: "20%",
-        height: "20%",
+    topButtonWrapper: {
+        position: "absolute",
+        display: "flex",
+        flexDirection: "row",
+        top: 104 / 3,
+        left: 64 / 3,
     },
-})
+    topButtons: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        overflow: "hidden",
+        position: "absolute",
+        top: 0,
+        left: 112 / 3,
+    }
+});
 
 export default CameraScreen;

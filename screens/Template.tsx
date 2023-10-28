@@ -1,27 +1,19 @@
 import {SafeAreaView, StyleSheet, View} from "react-native";
-import {Colors} from "react-native/Libraries/NewAppScreen";
-import {ReactNode, useEffect} from "react";
+import {ReactNode} from "react";
 import Footer, {FooterProps} from "../components/footer/Footer";
 
 interface TemplateProps extends FooterProps {
-    // setFooterProps: Function
     children?: ReactNode
 }
 
-function Template({ /*setFooterProps,*/ btnL, btnC, btnR, children }: TemplateProps) {
-    /*
-    useEffect(() => {
-        console.log('template');
-        setFooterProps({btnL, btnC, btnR});
-    }, []);
-     */
+function Template({ btnL, btnC, btnR, children }: TemplateProps) {
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.main}>
                 {children}
             </View>
-            <Footer btnL={btnL} btnC={btnC} btnR={btnR}></Footer>
-        </View>
+            <Footer btnL={btnL} btnC={btnC} btnR={btnR}/>
+        </SafeAreaView>
     )
 }
 
@@ -30,12 +22,11 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: Colors.darker,
+        backgroundColor: "#dbbbee",
         // maxHeight: '80%',
     },
     main: {
         flex: 1,
-        backgroundColor: Colors.darker,
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
