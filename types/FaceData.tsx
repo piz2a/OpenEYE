@@ -1,6 +1,7 @@
 interface Eye {
     pos: number[]
     open: boolean
+    imageUri?: string
 }
 
 interface EyePair {
@@ -10,6 +11,7 @@ interface EyePair {
 
 interface FaceData {
     face: number[]
+    faceImageUri?: string
     eyes: EyePair
 }
 

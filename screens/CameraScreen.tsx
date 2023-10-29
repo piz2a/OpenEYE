@@ -1,9 +1,20 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
-import {Alert, Animated, Easing, GestureResponderEvent, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {
+    Alert,
+    Animated,
+    BackHandler,
+    Easing,
+    GestureResponderEvent,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {Camera, CameraType, FlashMode} from "expo-camera";
+import * as FileSystem from "expo-file-system";
 
 interface TopButtonProps {
     source: any,
@@ -97,6 +108,16 @@ function TimerNum({ timerNum }: { timerNum: number }) {
     );
 }
 
+const requestFileWritePermission = async () => {
+    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+    console.log(permissions.granted);
+    if (!permissions.granted) {
+        console.log('File write Permissions Denied');
+        return null;
+    }
+    return permissions.directoryUri;
+}
+
 function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Camera'>): ReactElement {
     const camera = useRef<Camera>(null);
     const [type, setType] = useState(CameraType.back);
@@ -110,12 +131,24 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
 
     const [timerNum, setTimerNum] = useState<number | null>(null);
 
+    const directoryUriRef = useRef<string>('');
+
     // const windowWidth = Dimensions.get('window').width;
     // const windowHeight = Dimensions.get('window').height;
 
     useEffect(() => {
         if (!permission?.granted) requestPermission();
-    }, [permission]);
+
+        (async () => {
+            const directoryUri = await requestFileWritePermission();
+            if (!directoryUri) {
+                Alert.alert('파일 쓰기 권한을 허락해주세요.');
+                BackHandler.exitApp();
+                return;
+            }
+            directoryUriRef.current = directoryUri;
+        })();
+    }, []);
 
     const takePicture = async () => {
         if (camera.current && !taking/* && permission?.granted && ready*/) {
@@ -138,7 +171,7 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
                     console.log(i);
                 }
                 console.log(newImageUriList);
-                navigation.navigate('Loading', {uris: newImageUriList});
+                navigation.navigate('Loading', {uris: newImageUriList, directoryUri: directoryUriRef.current});
             }, timerButton ? timerSeconds * 1000 : 0);
         } else {
             if (!permission?.granted)

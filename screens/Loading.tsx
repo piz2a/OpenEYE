@@ -1,49 +1,39 @@
-import React, {ReactElement, useEffect, useRef} from "react";
+import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {Image, StyleSheet, Animated, View, Easing, Text, Alert} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
-import {CommonActions} from "@react-navigation/native";
 import {apiUrl} from "../Constants";
 import {FaceData} from "../types/FaceData";
+import axios from "axios";
+import * as FileSystem from 'expo-file-system';
 
-const fetchEyePos = async (imageCount: number, callback: (faceDataList: FaceData[] | null) => any) => {
+const fetchEyePos = async (imageCount: number) => {
     const responses: any[] = [];
-    let count = 0;
     for (let i = 0; i < imageCount; i++) {
         const body = new FormData();
         // @ts-ignore
         body.append('image', {uri: route.params.uris[i], name: 'image.jpg', type: 'image/jpeg'});
-        fetch(apiUrl + '/eyepos', {
+        const response = await fetch(apiUrl + '/eyepos', {
             method: 'POST',
             body: body
-        }).then(
-            (response) => {
-                response.text().then(console.log);
-                return response.json();
-            }
-        ).then((responseData) => {
-            responses.push(responseData);
-            console.log(
-                "POST Response #", i,
-                "Response Body -> " + JSON.stringify(responseData)
-            );
-            count++;
-            // response가 순서대로 오지 않을 수 있으므로 response가 모두 오면 다음 단계로 넘어감
-            if (count === imageCount) {
-                const faceDataList = jsonProcess(imageCount, responses);
-                callback(faceDataList);
-            }
-        }).catch(reason => {
-            console.log('Catch:', reason);
-        });
+        })
+        const responseData = await response.json();
+        console.log(
+            "POST Response #", i,
+            "Response Body -> " + JSON.stringify(responseData)
+        );
+
+        responses.push(responseData);
     }
+    return responses;
 };
 
-const jsonProcess = (imageCount: number, responses: any[]): FaceData[] | null => {
+const jsonProcess = (imageCount: number, responses: any[]) => {
     let peopleImagesCount = imageCount;
-    const faceDataList: FaceData[] = [];
+    const analysisList: FaceData[][] = [];
     responses.forEach(response => {
+        const faceDataList: FaceData[] = [];
         const peopleCount: number = response["people"];
         if (peopleCount === 0) {
             peopleImagesCount--;
@@ -64,12 +54,103 @@ const jsonProcess = (imageCount: number, responses: any[]): FaceData[] | null =>
                 }
             });
         }
+        analysisList.push(faceDataList);
     });
     if (peopleImagesCount === 0) return null;
-    return faceDataList;
+    return analysisList;
 };
 
-const generateImage = (faceDataList: FaceData[]) => {
+const cropImage = async (uri: string, pos: number[], directoryUri: string, fileName: string) => {
+    const body = new FormData();
+    // @ts-ignore
+    body.append('image', {uri: uri, name: 'image.jpg', type: 'image/jpeg'});
+    body.append('topleft', `${pos[0]} ${pos[1]}`);
+    body.append('bottomright', `${pos[2]} ${pos[3]}`);
+    const response = await axios.post(apiUrl + '/crop', body);
+
+    const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        directoryUri, fileName, 'image/jpeg'
+    );
+    await FileSystem.writeAsStringAsync(fileUri, response.data, { encoding: FileSystem.EncodingType.Base64 });
+
+    return fileUri;
+};
+
+const cropFacesAndEyes = async (uris: string[], analysisList: FaceData[][], directoryUri: string) => {
+    const newAnalysisList: FaceData[][] = [];
+    for (let i = 0; i < analysisList.length; i++) {
+        const newFaceDataList: FaceData[] = [];
+        for (let j = 0; i < analysisList[i].length; j++) {
+            newFaceDataList.push({
+                ...analysisList[i][j],
+                eyes: {
+                    left: {
+                        ...analysisList[i][j].eyes.left,
+                        imageUri: await cropImage(
+                            uris[i], analysisList[i][j].eyes.left.pos, directoryUri, `eyeLeft-${i}-${j}.jpg`
+                        )
+                    },
+                    right: {
+                        ...analysisList[i][j].eyes.right,
+                        imageUri: await cropImage(
+                            uris[i], analysisList[i][j].eyes.right.pos, directoryUri, `eyeRight-${i}-${j}.jpg`
+                        )
+                    }
+                },
+                faceImageUri: await cropImage(
+                    uris[i], analysisList[i][j].face, directoryUri, `face-${i}-${j}.jpg`
+                )
+            });
+        }
+        newAnalysisList.push(newFaceDataList);
+    }
+    return newAnalysisList;
+};
+
+const overlayImage = async (mainUri: string, overlayUri: string, pos: number[], directoryUri: string, fileName: string) => {
+    const body = new FormData();
+    // @ts-ignore
+    body.append('main', {uri: mainUri, name: 'main.jpg', type: 'image/jpeg'});
+    // @ts-ignore
+    body.append('overlay', {uri: overlayUri, name: 'overlay.jpg', type: 'image/jpeg'});
+    body.append('topleft', `${pos[0]} ${pos[1]}`);
+    body.append('bottomright', `${pos[2]} ${pos[3]}`);
+    const response = await axios.post(apiUrl + '/overlay', body);
+
+    const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        directoryUri, fileName, 'image/jpeg'
+    );
+    await FileSystem.writeAsStringAsync(fileUri, response.data, { encoding: FileSystem.EncodingType.Base64 });
+
+    return fileUri;
+};
+
+const overlayEyes = async (uris: string[], newAnalysisList: FaceData[][], directoryUri: string) => {
+    const bgImageNum = 0;
+    let mainImageUri = uris[bgImageNum];
+    const minFaceCount = Math.min(...newAnalysisList.map(faceDataList => faceDataList.length));
+
+    for (let j = 0; j < minFaceCount; j++) {
+        for (let eyeNum = 0; eyeNum < 2; eyeNum++) {
+            for (let i = 0; i < newAnalysisList.length; i++) {
+                const eye = newAnalysisList[i][j].eyes[eyeNum === 0 ? 'left' : 'right'];
+                if (eye.open) {
+                    if (i !== bgImageNum) {
+                        mainImageUri = await overlayImage(
+                            mainImageUri,
+                            eye.imageUri ? eye.imageUri : '',
+                            newAnalysisList[i][j].eyes.left.pos,
+                            directoryUri,
+                            `overlay.jpg`
+                        );
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    return mainImageUri;
 };
 
 function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Loading'>): ReactElement {
@@ -78,37 +159,60 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
         inputRange: [0, 1],
         outputRange: ['0deg', '360deg']
     });
+    const [text, setText] = useState('로딩 중');
 
     useEffect(() => {
-        Animated.loop(Animated.timing(spinAnim, {
-            toValue: 1,
-            duration: 6000,
-            easing: Easing.linear,
-            useNativeDriver: false,
-        })).start();
+        (async () => {
+            Animated.loop(Animated.timing(spinAnim, {
+                toValue: 1,
+                duration: 6000,
+                easing: Easing.linear,
+                useNativeDriver: false,
+            })).start();
 
-        fetchEyePos(route.params.uris.length, (faceDataList: FaceData[] | null) => {
-            if (faceDataList === null) {
+            setText('눈 분석 중');
+            const responses = await fetchEyePos(route.params.uris.length);
+            const analysisList = jsonProcess(route.params.uris.length, responses);
+            if (analysisList === null) {
                 Alert.alert("탐지된 사람이 없습니다.");
                 navigation.popToTop();
                 return;
             }
-            if (faceDataList.every(faceData => !faceData.eyes.left.open && !faceData.eyes.right.open)) {
+            if (analysisList.every(
+                faceDataList => faceDataList.every(
+                    faceData => !faceData.eyes.left.open && !faceData.eyes.right.open
+                )
+            )) {
                 Alert.alert("눈을 뜬 사람을 발견하지 못했습니다.");
                 navigation.popToTop();
                 return;
             }
 
-            generateImage(faceDataList);
+            setText('눈 사진 Crop 중');
+            const newAnalysisList = await cropFacesAndEyes(route.params.uris, analysisList, route.params.directoryUri);
+            if (!newAnalysisList) {
+                Alert.alert("파일 쓰기 권한을 부여해 주세요.");
+                navigation.popToTop();
+                return;
+            }
 
-            navigation.dispatch(CommonActions.reset({
+            setText('눈 사진 합성 중');
+            const previewImageUri = await overlayEyes(route.params.uris, newAnalysisList, route.params.directoryUri);
+
+            navigation.navigate('Preview', {
+                uris: route.params.uris,
+                directoryUri: route.params.directoryUri,
+                newAnalysisList: newAnalysisList,
+                previewImageUri: previewImageUri
+            });
+            /*navigation.dispatch(CommonActions.reset({
                 index: 1,
                 routes: [
                     { 'name': 'Camera' },
                     { 'name': 'Preview' },
                 ]
-            }));
-        });
+            }));*/
+        })();
     }, []);
 
     const iconSize = 150;
@@ -122,7 +226,7 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
                 <Image source={require('../assets/eyeonlylogo.png')} style={{width: iconSize, height: iconSize}}/>
             </View>
             <View style={styles.center}>
-                <Text style={styles.text}>Loading</Text>
+                <Text style={styles.text}>{text}</Text>
             </View>
         </Template>
     );

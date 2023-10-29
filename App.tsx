@@ -1,4 +1,4 @@
-import React, {ReactElement, useCallback} from 'react';
+import React, {ReactElement, useCallback, useEffect} from 'react';
 import {NavigationContainer} from "@react-navigation/native";
 import {createStackNavigator} from "@react-navigation/stack";
 import {RootStackParamList} from "./types/RootStackParams";
