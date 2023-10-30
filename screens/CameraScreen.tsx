@@ -118,7 +118,7 @@ const requestFileWritePermission = async () => {
     return permissions.directoryUri;
 }
 
-function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Camera'>): ReactElement {
+function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Camera'>): ReactElement {
     const camera = useRef<Camera>(null);
     const [type, setType] = useState(CameraType.back);
     const [permission, requestPermission] = Camera.useCameraPermissions();
@@ -138,10 +138,16 @@ function CameraScreen({ navigation }: NativeStackScreenProps<RootStackParamList,
 
     useEffect(() => {
         if (!permission?.granted) requestPermission();
+    }, [permission]);
 
+    useEffect(() => {
         (async () => {
+            if (route.params.directoryUri !== undefined) {
+                directoryUriRef.current = route.params.directoryUri;
+                return;
+            }
             const directoryUri = await requestFileWritePermission();
-            if (!directoryUri) {
+            if (directoryUri === null) {
                 Alert.alert('파일 쓰기 권한을 허락해주세요.');
                 BackHandler.exitApp();
                 return;

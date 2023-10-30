@@ -1,19 +1,21 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
-import {Image, StyleSheet, Animated, View, Easing, Text, Alert} from "react-native";
+import {Alert, Animated, Easing, Image, StyleSheet, Text, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {apiUrl} from "../Constants";
-import {FaceData} from "../types/FaceData";
+import {FaceData, SelectedEyesData} from "../types/FaceData";
 import axios from "axios";
 import * as FileSystem from 'expo-file-system';
+import {Buffer} from "buffer";
 
-const fetchEyePos = async (imageCount: number) => {
+const fetchEyePos = async (uris: string[]) => {
+    const imageCount = uris.length;
     const responses: any[] = [];
     for (let i = 0; i < imageCount; i++) {
         const body = new FormData();
         // @ts-ignore
-        body.append('image', {uri: route.params.uris[i], name: 'image.jpg', type: 'image/jpeg'});
+        body.append('image', {uri: uris[i], name: 'image.jpg', type: 'image/jpeg'});
         const response = await fetch(apiUrl + '/eyepos', {
             method: 'POST',
             body: body
@@ -57,6 +59,7 @@ const jsonProcess = (imageCount: number, responses: any[]) => {
         analysisList.push(faceDataList);
     });
     if (peopleImagesCount === 0) return null;
+    console.log(JSON.stringify(analysisList));
     return analysisList;
 };
 
@@ -66,12 +69,13 @@ const cropImage = async (uri: string, pos: number[], directoryUri: string, fileN
     body.append('image', {uri: uri, name: 'image.jpg', type: 'image/jpeg'});
     body.append('topleft', `${pos[0]} ${pos[1]}`);
     body.append('bottomright', `${pos[2]} ${pos[3]}`);
+    console.log(uri, JSON.stringify(pos));
     const response = await axios.post(apiUrl + '/crop', body);
 
     const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
         directoryUri, fileName, 'image/jpeg'
     );
-    await FileSystem.writeAsStringAsync(fileUri, response.data, { encoding: FileSystem.EncodingType.Base64 });
+    await FileSystem.writeAsStringAsync(fileUri, Buffer.from(response.data, 'binary').toString('base64'), { encoding: FileSystem.EncodingType.Base64 });
 
     return fileUri;
 };
@@ -80,27 +84,33 @@ const cropFacesAndEyes = async (uris: string[], analysisList: FaceData[][], dire
     const newAnalysisList: FaceData[][] = [];
     for (let i = 0; i < analysisList.length; i++) {
         const newFaceDataList: FaceData[] = [];
-        for (let j = 0; i < analysisList[i].length; j++) {
-            newFaceDataList.push({
-                ...analysisList[i][j],
-                eyes: {
-                    left: {
-                        ...analysisList[i][j].eyes.left,
-                        imageUri: await cropImage(
-                            uris[i], analysisList[i][j].eyes.left.pos, directoryUri, `eyeLeft-${i}-${j}.jpg`
-                        )
+        for (let j = 0; j < analysisList[i].length; j++) {
+            console.log(`${i} ${j}`, JSON.stringify(analysisList[i][j]));
+            try {
+                const newFaceData: FaceData = {
+                    ...analysisList[i][j],
+                    eyes: {
+                        left: {
+                            ...analysisList[i][j].eyes.left,
+                            imageUri: await cropImage(
+                                uris[i], analysisList[i][j].eyes.left.pos, directoryUri, `eyeLeft-${new Date().getTime()}-${i}-${j}.jpg`
+                            )
+                        },
+                        right: {
+                            ...analysisList[i][j].eyes.right,
+                            imageUri: await cropImage(
+                                uris[i], analysisList[i][j].eyes.right.pos, directoryUri, `eyeRight-${new Date().getTime()}-${i}-${j}.jpg`
+                            )
+                        }
                     },
-                    right: {
-                        ...analysisList[i][j].eyes.right,
-                        imageUri: await cropImage(
-                            uris[i], analysisList[i][j].eyes.right.pos, directoryUri, `eyeRight-${i}-${j}.jpg`
-                        )
-                    }
-                },
-                faceImageUri: await cropImage(
-                    uris[i], analysisList[i][j].face, directoryUri, `face-${i}-${j}.jpg`
-                )
-            });
+                    faceImageUri: await cropImage(
+                        uris[i], analysisList[i][j].face, directoryUri, `face-${new Date().getTime()}-${i}-${j}.jpg`
+                    )
+                };
+                newFaceDataList.push(newFaceData);
+            } catch (e) {
+                console.log(e);
+            }
         }
         newAnalysisList.push(newFaceDataList);
     }
@@ -129,28 +139,34 @@ const overlayEyes = async (uris: string[], newAnalysisList: FaceData[][], direct
     const bgImageNum = 0;
     let mainImageUri = uris[bgImageNum];
     const minFaceCount = Math.min(...newAnalysisList.map(faceDataList => faceDataList.length));
+    const selectedEyesData: SelectedEyesData = {
+        backgroundNum: bgImageNum,
+        selectedEyeNum: []
+    };
 
     for (let j = 0; j < minFaceCount; j++) {
-        for (let eyeNum = 0; eyeNum < 2; eyeNum++) {
-            for (let i = 0; i < newAnalysisList.length; i++) {
+        for (let i = 0; i < newAnalysisList.length; i++) {
+            if (![0, 1].every(eyeNum => newAnalysisList[i][j].eyes[eyeNum === 0 ? 'left' : 'right'].open))
+                continue;
+            for (let eyeNum = 0; eyeNum < 2; eyeNum++) {
                 const eye = newAnalysisList[i][j].eyes[eyeNum === 0 ? 'left' : 'right'];
-                if (eye.open) {
-                    if (i !== bgImageNum) {
-                        mainImageUri = await overlayImage(
-                            mainImageUri,
-                            eye.imageUri ? eye.imageUri : '',
-                            newAnalysisList[i][j].eyes.left.pos,
-                            directoryUri,
-                            `overlay.jpg`
-                        );
-                    }
-                    break;
+                if (i !== bgImageNum) {
+                    mainImageUri = await overlayImage(
+                        mainImageUri,
+                        eye.imageUri ? eye.imageUri : '',
+                        newAnalysisList[i][j].eyes.left.pos,
+                        directoryUri,
+                        `overlay.jpg`
+                    );
                 }
             }
+            selectedEyesData.selectedEyeNum.push(i);
+            break;
         }
     }
 
-    return mainImageUri;
+    const previewImageUri = mainImageUri;
+    return {previewImageUri, selectedEyesData};
 };
 
 function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Loading'>): ReactElement {
@@ -171,7 +187,7 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
             })).start();
 
             setText('눈 분석 중');
-            const responses = await fetchEyePos(route.params.uris.length);
+            const responses = await fetchEyePos(route.params.uris);
             const analysisList = jsonProcess(route.params.uris.length, responses);
             if (analysisList === null) {
                 Alert.alert("탐지된 사람이 없습니다.");
@@ -197,13 +213,14 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
             }
 
             setText('눈 사진 합성 중');
-            const previewImageUri = await overlayEyes(route.params.uris, newAnalysisList, route.params.directoryUri);
+            const {previewImageUri, selectedEyesData} = await overlayEyes(route.params.uris, newAnalysisList, route.params.directoryUri);
 
             navigation.navigate('Preview', {
                 uris: route.params.uris,
                 directoryUri: route.params.directoryUri,
                 newAnalysisList: newAnalysisList,
-                previewImageUri: previewImageUri
+                previewImageUri: previewImageUri,
+                selectedEyesData: selectedEyesData,
             });
             /*navigation.dispatch(CommonActions.reset({
                 index: 1,
@@ -245,6 +262,6 @@ const styles = StyleSheet.create({
         marginTop: 220,
         color: "#2B1F45",
     }
-})
+});
 
 export default Loading;

@@ -1,10 +1,21 @@
-import {FaceData} from "./FaceData";
+import {FaceData, SelectedEyesData} from "./FaceData";
 
 export type RootStackParamList = {
-    Camera: undefined;
-    Loading: { uris: string[], directoryUri: string };
-    Preview: { uris: string[], directoryUri: string, newAnalysisList: FaceData[][], previewImageUri: string };
-    EyeSelection: undefined;
+    Camera: {
+        directoryUri?: string,
+    };
+    Loading: {
+        uris: string[],
+        directoryUri: string ,
+    };
+    Preview: {
+        uris: string[],
+        directoryUri: string,
+        newAnalysisList: FaceData[][],
+        previewImageUri: string,
+        selectedEyesData: SelectedEyesData,
+    };
+    EyeSelection: undefined //{ uris: string[], directoryUri: string, newAnalysisList: FaceData[][], previewImageUri: string };
     OutFocusing: undefined;
     Saving: undefined;
     Complete: undefined;

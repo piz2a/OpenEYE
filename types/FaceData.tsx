@@ -15,4 +15,9 @@ interface FaceData {
     eyes: EyePair
 }
 
-export {Eye, EyePair, FaceData};
+interface SelectedEyesData {
+    backgroundNum: number
+    selectedEyeNum: number[]
+}
+
+export {Eye, EyePair, FaceData, SelectedEyesData};

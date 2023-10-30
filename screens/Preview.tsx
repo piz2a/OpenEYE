@@ -3,30 +3,44 @@ import {Image, StyleSheet, Text, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
+import {CommonActions} from "@react-navigation/native";
+
+const sum = (array: number[]) => array.reduce((partialSum, a) => partialSum + a, 0);
 
 function Preview({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Preview'>): ReactElement {
     return (
-        <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => navigation.popToTop()}}
+        <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => navigation.dispatch(CommonActions.reset({index: 0, routes: [{name: 'Camera', params: {directoryUri: route.params.directoryUri}}]}))}}
                   btnC={{source: require('../assets/buttons/9.png'), onPress: () => navigation.navigate('Saving')}}
                   btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate('EyeSelection')}}>
-            <Image style={styles.image} source={{uri: route.params.previewImageUri}}/>
-            <View style={styles.display}>
-                <Image source={require('../assets/labels/15.png')} style={{width: 392 / 3, height: 112 / 3}}/>
-            </View>
+            <Image style={styles.image} source={{uri: route.params.uris[0]/*route.params.previewImageUri*/}}/>
+            <Image source={require('../assets/labels/15.png')} style={styles.display}/>
+            <Text style={{...styles.text, right: 360 - (260 - 20) / 3}}>
+                {Math.max(...route.params.newAnalysisList.map(faceDataList => faceDataList.length))}
+            </Text>
+            <Text style={{...styles.text, right: 360 - (260 + 392 / 2 - 20) / 3}}>
+                {Math.max(...route.params.newAnalysisList.map(faceDataList => faceDataList.length))}
+            </Text>
         </Template>
     );
 }
 
 const styles = StyleSheet.create({
     image: {
+        flex: 1,
         width: '100%',
     },
     display: {
-        position: 'relative',
-        display: "flex",
-        flexDirection: "row",
+        position: 'absolute',
         top: 104 / 3,
         left: 64 / 3,
+        width: 392 / 3,
+        height: 112 / 3,
+    },
+    text: {
+        position: 'absolute',
+        top: 160 / 3 - 18,
+        fontFamily: 'Pretendard-Bold',
+        fontSize: 18,
     }
 });
 
