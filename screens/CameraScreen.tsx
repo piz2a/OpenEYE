@@ -15,6 +15,8 @@ import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {Camera, CameraType, FlashMode} from "expo-camera";
 import * as FileSystem from "expo-file-system";
+import * as ScreenOrientation from 'expo-screen-orientation';
+import {Orientation} from 'expo-screen-orientation';
 
 interface TopButtonProps {
     source: any,
@@ -133,8 +135,25 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
 
     const directoryUriRef = useRef<string>('');
 
+    const orientationRef = useRef(Orientation.PORTRAIT_UP);
+
     // const windowWidth = Dimensions.get('window').width;
     // const windowHeight = Dimensions.get('window').height;
+
+    ScreenOrientation.addOrientationChangeListener(
+        (event) => {
+            orientationRef.current = event.orientationInfo.orientation;
+            // Orientation 변화 시 Footer Button Animation 주기
+            switch (orientationRef.current) {
+                case Orientation.PORTRAIT_UP:
+                    break;
+                case Orientation.LANDSCAPE_LEFT:
+                    break;
+                case Orientation.LANDSCAPE_RIGHT:
+                    break;
+            }
+        }
+    );
 
     useEffect(() => {
         if (!permission?.granted) requestPermission();
@@ -142,17 +161,17 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
 
     useEffect(() => {
         (async () => {
-            if (route.params.directoryUri !== undefined) {
+            if (route && route.params && route.params.directoryUri) {
                 directoryUriRef.current = route.params.directoryUri;
-                return;
+            } else {
+                const directoryUri = await requestFileWritePermission();
+                if (directoryUri === null) {
+                    Alert.alert('파일 쓰기 권한을 허락해주세요.');
+                    BackHandler.exitApp();
+                    return;
+                }
+                directoryUriRef.current = directoryUri;
             }
-            const directoryUri = await requestFileWritePermission();
-            if (directoryUri === null) {
-                Alert.alert('파일 쓰기 권한을 허락해주세요.');
-                BackHandler.exitApp();
-                return;
-            }
-            directoryUriRef.current = directoryUri;
         })();
     }, []);
 
@@ -177,7 +196,11 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
                     console.log(i);
                 }
                 console.log(newImageUriList);
-                navigation.navigate('Loading', {uris: newImageUriList, directoryUri: directoryUriRef.current});
+                navigation.navigate('Loading', {
+                    uris: newImageUriList,
+                    directoryUri: directoryUriRef.current,
+                    orientation: orientationRef.current,
+                });
             }, timerButton ? timerSeconds * 1000 : 0);
         } else {
             if (!permission?.granted)

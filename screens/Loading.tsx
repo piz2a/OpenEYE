@@ -7,7 +7,6 @@ import {apiUrl} from "../Constants";
 import {FaceData, SelectedEyesData} from "../types/FaceData";
 import axios from "axios";
 import * as FileSystem from 'expo-file-system';
-import {Buffer} from "buffer";
 
 const fetchEyePos = async (uris: string[]) => {
     const imageCount = uris.length;
@@ -70,12 +69,13 @@ const cropImage = async (uri: string, pos: number[], directoryUri: string, fileN
     body.append('topleft', `${pos[0]} ${pos[1]}`);
     body.append('bottomright', `${pos[2]} ${pos[3]}`);
     console.log(uri, JSON.stringify(pos));
-    const response = await axios.post(apiUrl + '/crop', body);
+    const response = await axios.post(apiUrl + '/crop', body).catch(console.log);
 
     const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
         directoryUri, fileName, 'image/jpeg'
     );
-    await FileSystem.writeAsStringAsync(fileUri, Buffer.from(response.data, 'binary').toString('base64'), { encoding: FileSystem.EncodingType.Base64 });
+    // await FileSystem.writeAsStringAsync(fileUri, Buffer.from(response.data, 'binary').toString('base64'), { encoding: FileSystem.EncodingType.Base64 });
+    await FileSystem.downloadAsync(apiUrl + '/crop', FileSystem.documentDirectory + fileName);
 
     return fileUri;
 };
@@ -125,12 +125,12 @@ const overlayImage = async (mainUri: string, overlayUri: string, pos: number[], 
     body.append('overlay', {uri: overlayUri, name: 'overlay.jpg', type: 'image/jpeg'});
     body.append('topleft', `${pos[0]} ${pos[1]}`);
     body.append('bottomright', `${pos[2]} ${pos[3]}`);
-    const response = await axios.post(apiUrl + '/overlay', body);
+    await axios.post(apiUrl + '/overlay', body).catch(console.log);
 
     const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
         directoryUri, fileName, 'image/jpeg'
     );
-    await FileSystem.writeAsStringAsync(fileUri, response.data, { encoding: FileSystem.EncodingType.Base64 });
+    await FileSystem.downloadAsync(apiUrl + '/overlay', fileUri, {});
 
     return fileUri;
 };
@@ -206,18 +206,12 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
 
             setText('눈 사진 Crop 중');
             const newAnalysisList = await cropFacesAndEyes(route.params.uris, analysisList, route.params.directoryUri);
-            if (!newAnalysisList) {
-                Alert.alert("파일 쓰기 권한을 부여해 주세요.");
-                navigation.popToTop();
-                return;
-            }
 
             setText('눈 사진 합성 중');
             const {previewImageUri, selectedEyesData} = await overlayEyes(route.params.uris, newAnalysisList, route.params.directoryUri);
 
             navigation.navigate('Preview', {
-                uris: route.params.uris,
-                directoryUri: route.params.directoryUri,
+                ...route.params,
                 newAnalysisList: newAnalysisList,
                 previewImageUri: previewImageUri,
                 selectedEyesData: selectedEyesData,
@@ -258,7 +252,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontFamily: 'Pretendard-Regular',
-        fontSize: 30,
+        fontSize: 25,
         marginTop: 220,
         color: "#2B1F45",
     }
