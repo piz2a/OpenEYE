@@ -7,6 +7,7 @@ import {apiUrl} from "../Constants";
 import {FaceData, SelectedEyesData} from "../types/FaceData";
 import axios from "axios";
 import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from "expo-media-library";
 
 const fetchEyePos = async (uris: string[]) => {
     const imageCount = uris.length;
@@ -62,25 +63,36 @@ const jsonProcess = (imageCount: number, responses: any[]) => {
     return analysisList;
 };
 
-const cropImage = async (uri: string, pos: number[], directoryUri: string, fileName: string) => {
+const downloadImage = async (uri: string, fileUri: string) => {
+    try {
+        const res = await FileSystem.downloadAsync(uri, fileUri);
+        const asset = await MediaLibrary.createAssetAsync(res.uri);
+        const album = await MediaLibrary.getAlbumAsync('Download');
+        if (album == null) {
+            await MediaLibrary.createAlbumAsync('Download', asset, false);
+        } else {
+            await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        }
+    } catch (err) {
+        console.log("downloadImage error:", err);
+    }
+};
+
+const cropImage = async (uri: string, pos: number[], fileName: string) => {
     const body = new FormData();
     // @ts-ignore
     body.append('image', {uri: uri, name: 'image.jpg', type: 'image/jpeg'});
     body.append('topleft', `${pos[0]} ${pos[1]}`);
     body.append('bottomright', `${pos[2]} ${pos[3]}`);
     console.log(uri, JSON.stringify(pos));
-    const response = await axios.post(apiUrl + '/crop', body).catch(console.log);
+    await axios.post(apiUrl + '/crop', body).catch(console.log);
 
-    const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-        directoryUri, fileName, 'image/jpeg'
-    );
-    // await FileSystem.writeAsStringAsync(fileUri, Buffer.from(response.data, 'binary').toString('base64'), { encoding: FileSystem.EncodingType.Base64 });
-    await FileSystem.downloadAsync(apiUrl + '/crop', FileSystem.documentDirectory + fileName);
-
-    return fileUri;
+    const fileUri = FileSystem.documentDirectory + '/' + fileName;
+    const res = await FileSystem.downloadAsync(apiUrl + '/crop', fileUri);
+    return res.uri;
 };
 
-const cropFacesAndEyes = async (uris: string[], analysisList: FaceData[][], directoryUri: string) => {
+const cropFacesAndEyes = async (uris: string[], analysisList: FaceData[][]) => {
     const newAnalysisList: FaceData[][] = [];
     for (let i = 0; i < analysisList.length; i++) {
         const newFaceDataList: FaceData[] = [];
@@ -93,18 +105,18 @@ const cropFacesAndEyes = async (uris: string[], analysisList: FaceData[][], dire
                         left: {
                             ...analysisList[i][j].eyes.left,
                             imageUri: await cropImage(
-                                uris[i], analysisList[i][j].eyes.left.pos, directoryUri, `eyeLeft-${new Date().getTime()}-${i}-${j}.jpg`
+                                uris[i], analysisList[i][j].eyes.left.pos, `eyeLeft-${new Date().getTime()}-${i}-${j}.jpg`
                             )
                         },
                         right: {
                             ...analysisList[i][j].eyes.right,
                             imageUri: await cropImage(
-                                uris[i], analysisList[i][j].eyes.right.pos, directoryUri, `eyeRight-${new Date().getTime()}-${i}-${j}.jpg`
+                                uris[i], analysisList[i][j].eyes.right.pos, `eyeRight-${new Date().getTime()}-${i}-${j}.jpg`
                             )
                         }
                     },
                     faceImageUri: await cropImage(
-                        uris[i], analysisList[i][j].face, directoryUri, `face-${new Date().getTime()}-${i}-${j}.jpg`
+                        uris[i], analysisList[i][j].face, `face-${new Date().getTime()}-${i}-${j}.jpg`
                     )
                 };
                 newFaceDataList.push(newFaceData);
@@ -117,56 +129,22 @@ const cropFacesAndEyes = async (uris: string[], analysisList: FaceData[][], dire
     return newAnalysisList;
 };
 
-const overlayImage = async (mainUri: string, overlayUri: string, pos: number[], directoryUri: string, fileName: string) => {
+const sampleImage = async (uris: string[], response: any[]): Promise<{previewImageUri: string, selectedEyesData: SelectedEyesData}> => {
     const body = new FormData();
-    // @ts-ignore
-    body.append('main', {uri: mainUri, name: 'main.jpg', type: 'image/jpeg'});
-    // @ts-ignore
-    body.append('overlay', {uri: overlayUri, name: 'overlay.jpg', type: 'image/jpeg'});
-    body.append('topleft', `${pos[0]} ${pos[1]}`);
-    body.append('bottomright', `${pos[2]} ${pos[3]}`);
-    await axios.post(apiUrl + '/overlay', body).catch(console.log);
-
-    const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-        directoryUri, fileName, 'image/jpeg'
-    );
-    await FileSystem.downloadAsync(apiUrl + '/overlay', fileUri, {});
-
-    return fileUri;
-};
-
-const overlayEyes = async (uris: string[], newAnalysisList: FaceData[][], directoryUri: string) => {
-    const bgImageNum = 0;
-    let mainImageUri = uris[bgImageNum];
-    const minFaceCount = Math.min(...newAnalysisList.map(faceDataList => faceDataList.length));
-    const selectedEyesData: SelectedEyesData = {
-        backgroundNum: bgImageNum,
-        selectedEyeNum: []
-    };
-
-    for (let j = 0; j < minFaceCount; j++) {
-        for (let i = 0; i < newAnalysisList.length; i++) {
-            if (![0, 1].every(eyeNum => newAnalysisList[i][j].eyes[eyeNum === 0 ? 'left' : 'right'].open))
-                continue;
-            for (let eyeNum = 0; eyeNum < 2; eyeNum++) {
-                const eye = newAnalysisList[i][j].eyes[eyeNum === 0 ? 'left' : 'right'];
-                if (i !== bgImageNum) {
-                    mainImageUri = await overlayImage(
-                        mainImageUri,
-                        eye.imageUri ? eye.imageUri : '',
-                        newAnalysisList[i][j].eyes.left.pos,
-                        directoryUri,
-                        `overlay.jpg`
-                    );
-                }
-            }
-            selectedEyesData.selectedEyeNum.push(i);
-            break;
-        }
+    for (let i = 1; i <= 3; i++) {
+        // @ts-ignore
+        body.append(`image${i}`, {uri: uris[i - 1], name: `${i}.jpg`, type: 'image/jpeg'});
     }
+    body.append('json', JSON.stringify(response));
+    await axios.post(apiUrl + '/sampleimg', body).catch(console.log);
 
-    const previewImageUri = mainImageUri;
-    return {previewImageUri, selectedEyesData};
+    const fileUri = FileSystem.documentDirectory + '/sampleimg.jpg';
+    const res = await FileSystem.downloadAsync(apiUrl + '/sampleimg', fileUri);
+
+    return {
+        previewImageUri: res.uri,
+        selectedEyesData: {backgroundNum: 0, selectedEyeNum: []}
+    };
 };
 
 function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Loading'>): ReactElement {
@@ -191,7 +169,7 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
             const analysisList = jsonProcess(route.params.uris.length, responses);
             if (analysisList === null) {
                 Alert.alert("탐지된 사람이 없습니다.");
-                navigation.popToTop();
+                route.params.backToCamera(navigation, route);
                 return;
             }
             if (analysisList.every(
@@ -200,15 +178,16 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
                 )
             )) {
                 Alert.alert("눈을 뜬 사람을 발견하지 못했습니다.");
-                navigation.popToTop();
+                route.params.backToCamera(navigation, route);
                 return;
             }
 
             setText('눈 사진 Crop 중');
-            const newAnalysisList = await cropFacesAndEyes(route.params.uris, analysisList, route.params.directoryUri);
+            const newAnalysisList = await cropFacesAndEyes(route.params.uris, analysisList);
 
             setText('눈 사진 합성 중');
-            const {previewImageUri, selectedEyesData} = await overlayEyes(route.params.uris, newAnalysisList, route.params.directoryUri);
+            // const {previewImageUri, selectedEyesData} = await overlayEyes(route.params.uris, newAnalysisList);
+            const {previewImageUri, selectedEyesData} = await sampleImage(route.params.uris, responses);
 
             navigation.navigate('Preview', {
                 ...route.params,
@@ -216,20 +195,13 @@ function Loading({ navigation, route }: NativeStackScreenProps<RootStackParamLis
                 previewImageUri: previewImageUri,
                 selectedEyesData: selectedEyesData,
             });
-            /*navigation.dispatch(CommonActions.reset({
-                index: 1,
-                routes: [
-                    { 'name': 'Camera' },
-                    { 'name': 'Preview' },
-                ]
-            }));*/
         })();
     }, []);
 
     const iconSize = 150;
 
     return (
-        <Template btnL={{}} btnC={{}} btnR={{}}>
+        <Template>
             <View style={styles.center}>
                 <Animated.Image source={require('../assets/eyelesslogo.png')} style={{width: iconSize, height: iconSize, transform: [{rotate: spin}]}}/>
             </View>
@@ -251,7 +223,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     text: {
-        fontFamily: 'Pretendard-Regular',
+        fontFamily: 'Pretendard-Bold',
         fontSize: 25,
         marginTop: 220,
         color: "#2B1F45",

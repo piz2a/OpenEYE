@@ -15,8 +15,10 @@ import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
 import {Camera, CameraType, FlashMode} from "expo-camera";
 import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from 'expo-media-library';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {Orientation} from 'expo-screen-orientation';
+import {CommonActions} from "@react-navigation/native";
 
 interface TopButtonProps {
     source: any,
@@ -120,6 +122,10 @@ const requestFileWritePermission = async () => {
     return permissions.directoryUri;
 }
 
+const backToCamera = (navigation: any, route: any) => navigation.dispatch(
+    CommonActions.reset({index: 0, routes: [{name: 'Camera', params: {directoryUri: route.params.directoryUri}}]})
+);
+
 function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Camera'>): ReactElement {
     const camera = useRef<Camera>(null);
     const [type, setType] = useState(CameraType.back);
@@ -133,44 +139,39 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
 
     const [timerNum, setTimerNum] = useState<number | null>(null);
 
-    const directoryUriRef = useRef<string>('');
-
     const orientationRef = useRef(Orientation.PORTRAIT_UP);
 
     // const windowWidth = Dimensions.get('window').width;
     // const windowHeight = Dimensions.get('window').height;
-
-    ScreenOrientation.addOrientationChangeListener(
-        (event) => {
-            orientationRef.current = event.orientationInfo.orientation;
-            // Orientation 변화 시 Footer Button Animation 주기
-            switch (orientationRef.current) {
-                case Orientation.PORTRAIT_UP:
-                    break;
-                case Orientation.LANDSCAPE_LEFT:
-                    break;
-                case Orientation.LANDSCAPE_RIGHT:
-                    break;
-            }
-        }
-    );
 
     useEffect(() => {
         if (!permission?.granted) requestPermission();
     }, [permission]);
 
     useEffect(() => {
-        (async () => {
-            if (route && route.params && route.params.directoryUri) {
-                directoryUriRef.current = route.params.directoryUri;
-            } else {
-                const directoryUri = await requestFileWritePermission();
-                if (directoryUri === null) {
-                    Alert.alert('파일 쓰기 권한을 허락해주세요.');
-                    BackHandler.exitApp();
-                    return;
+        ScreenOrientation.addOrientationChangeListener(
+            (event) => {
+                orientationRef.current = event.orientationInfo.orientation;
+                console.log("orientation: ", event.orientationInfo.orientation);
+                // Orientation 변화 시 Footer Button Animation 주기
+                switch (orientationRef.current) {
+                    case Orientation.PORTRAIT_UP:
+                        break;
+                    case Orientation.LANDSCAPE_LEFT:
+                        break;
+                    case Orientation.LANDSCAPE_RIGHT:
+                        break;
                 }
-                directoryUriRef.current = directoryUri;
+            }
+        );
+
+        (async () => {
+            const { status } = await MediaLibrary.requestPermissionsAsync();//Permissions.askAsync(Permissions.MEDIA_LIBRARY);
+            if (status === 'denied') {
+                Alert.alert('권한 필요', '파일 쓰기 권한을 허락해주세요. 그 후 앱을 다시 실행해주세요.');
+                return;
+            } else if (status === 'granted') {
+                // Nice
             }
         })();
     }, []);
@@ -198,8 +199,8 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
                 console.log(newImageUriList);
                 navigation.navigate('Loading', {
                     uris: newImageUriList,
-                    directoryUri: directoryUriRef.current,
                     orientation: orientationRef.current,
+                    backToCamera: backToCamera,
                 });
             }, timerButton ? timerSeconds * 1000 : 0);
         } else {

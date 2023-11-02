@@ -2,13 +2,12 @@ import {FaceData, SelectedEyesData} from "./FaceData";
 
 interface LoadingParams {
     uris: string[]
-    directoryUri: string
     orientation: number
+    backToCamera: (navigation: any, route: any) => void
 }
 
 interface PreviewParams extends LoadingParams {
     uris: string[]
-    directoryUri: string
     newAnalysisList: FaceData[][]
     previewImageUri: string
     selectedEyesData: SelectedEyesData

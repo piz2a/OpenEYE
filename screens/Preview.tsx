@@ -3,20 +3,18 @@ import {Image, StyleSheet, Text, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./Template";
-import {CommonActions} from "@react-navigation/native";
-
-const sum = (array: number[]) => array.reduce((partialSum, a) => partialSum + a, 0);
 
 function Preview({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Preview'>): ReactElement {
+    const bgNum = route.params.selectedEyesData.backgroundNum;
     const minPeopleCount = Math.min(...route.params.newAnalysisList.map(faceDataList => faceDataList.length));
     let openPeopleCount = 0;
     for (let j = 0; j < minPeopleCount; j++) {
-        const eyes = route.params.newAnalysisList[route.params.selectedEyesData.backgroundNum][j].eyes;
+        const eyes = route.params.newAnalysisList[bgNum][j].eyes;
         if (!eyes.left.open || !eyes.right.open) openPeopleCount++;
     }
 
     return (
-        <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => navigation.dispatch(CommonActions.reset({index: 0, routes: [{name: 'Camera', params: {directoryUri: route.params.directoryUri}}]}))}}
+        <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => route.params.backToCamera(navigation, route)}}
                   btnC={{source: require('../assets/buttons/9.png'), onPress: () => navigation.navigate('Saving')}}
                   btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate('EyeSelection', route.params)}}>
             <Image style={styles.image} source={{uri: /*route.params.uris[0]*/route.params.previewImageUri}}/>
@@ -45,7 +43,7 @@ const styles = StyleSheet.create({
     },
     text: {
         position: 'absolute',
-        top: 160 / 3 - 12,
+        top: 160 / 3 - 14,
         fontFamily: 'Pretendard-Bold',
         fontSize: 18,
         color: "#2B1F45",
