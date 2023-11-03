@@ -1,29 +1,30 @@
-import React, {ReactElement, useEffect} from "react";
-import {Text} from "react-native";
+import React, {ReactElement} from "react";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Template from "./templates/Template";
-import {CommonActions} from "@react-navigation/native";
+import LoadingTemplate from "./templates/LoadingTemplate";
+import * as MediaLibrary from "expo-media-library";
 
-// navigator history에서 삭제시켜야 한다.
+const downloadImage = async (uri: string) => {
+    try {
+        const asset = await MediaLibrary.createAssetAsync(uri);
+        const album = await MediaLibrary.getAlbumAsync('Download');
+        if (album == null) {
+            await MediaLibrary.createAlbumAsync('Download', asset, false);
+        } else {
+            await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        }
+    } catch (e) {
+        console.log("downloadImage error:", e);
+    }
+};
 
-function Saving({ navigation }: NativeStackScreenProps<RootStackParamList, 'Saving'>): ReactElement {
-    useEffect(() => {
-        navigation.dispatch(CommonActions.reset({
-            index: 2,
-            routes: [
-                { 'name': 'Camera' },
-                { 'name': 'Preview' },
-                { 'name': 'Complete' },
-            ]
-        }));
-    });
-
-    return (
-        <Template btnL={{}} btnC={{}} btnR={{}}>
-            <Text style={{color: "#fff"}}>Saving...</Text>
-        </Template>
-    );
+function Saving({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Saving'>): ReactElement {
+    const callbackProcess = async (setText: Function) => {
+        setText('사진 저장 중');
+        await downloadImage(route.params.previewImageUri);
+        navigation.navigate('Complete', route.params);
+    }
+    return <LoadingTemplate callbackProcess={callbackProcess}/>;
 }
 
 export default Saving;

@@ -15,8 +15,8 @@ function Preview({ navigation, route }: NativeStackScreenProps<RootStackParamLis
 
     return (
         <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => route.params.backToCamera(navigation, route)}}
-                  btnC={{source: require('../assets/buttons/9.png'), onPress: () => navigation.navigate('Saving')}}
-                  btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate('Loading2', route.params)}}>
+                  btnC={{source: require('../assets/buttons/9.png'), onPress: () => navigation.navigate('Saving', route.params)}}
+                  btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate(route.params.cropped ? 'EyeSelection' : 'Loading2', route.params)}}>
             <Image style={styles.image} source={{uri: /*route.params.uris[0]*/route.params.previewImageUri}}/>
             <Image source={require('../assets/labels/15.png')} style={styles.display}/>
             <Text style={{...styles.text, right: 360 - (260 - 20) / 3}}>

@@ -1,16 +1,13 @@
-import React, {ReactElement, useEffect} from "react";
-import {Button, Text} from "react-native";
+import React, {ReactElement} from "react";
+import {Text} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import Template from "./templates/Template";
 
-// navigator history에서 삭제시켜야 한다.
-
-function Complete({ navigation }: NativeStackScreenProps<RootStackParamList, 'Complete'>): ReactElement {
+function Complete({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Complete'>): ReactElement {
     return (
-        <Template btnL={{}} btnC={{}} btnR={{}}>
-            <Text style={{color: "#fff"}}>Complete</Text>
-            <Button title="Take another" onPress={navigation.popToTop}/>
+        <Template btnC={{source: require('../assets/buttons/16.png'), onPress: () => route.params.backToCamera(navigation, route)}}>
+            <Text style={{color: "#fff", fontFamily: 'Pretendard-Bold', fontSize: 25}}>저장이 완료되었습니다</Text>
         </Template>
     );
 }

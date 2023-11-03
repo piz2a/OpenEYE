@@ -10,6 +10,7 @@ interface PreviewParams extends LoadingParams {
     analysisList: FaceData[][]
     previewImageUri: string
     selectedEyesData: SelectedEyesData
+    cropped: boolean
 }
 
 export type RootStackParamList = {
@@ -19,6 +20,6 @@ export type RootStackParamList = {
     Loading2: PreviewParams
     EyeSelection: PreviewParams
     OutFocusing: undefined
-    Saving: undefined
-    Complete: undefined
+    Saving: PreviewParams
+    Complete: PreviewParams
 };
