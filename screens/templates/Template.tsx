@@ -1,6 +1,6 @@
 import {SafeAreaView, StyleSheet, View} from "react-native";
 import {ReactNode} from "react";
-import Footer, {FooterProps} from "../components/footer/Footer";
+import Footer, {FooterProps} from "../../components/footer/Footer";
 
 interface TemplateProps extends FooterProps {
     children?: ReactNode

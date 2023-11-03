@@ -2,17 +2,11 @@ import React, {ReactElement} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Template from "./Template";
+import Template from "./templates/Template";
 import {CommonActions} from "@react-navigation/native";
 
-function OutFocusing({ navigation }: NativeStackScreenProps<RootStackParamList, 'OutFocusing'>): ReactElement {
-    const backToPreview = () => navigation.dispatch(CommonActions.reset({
-        index: 1,
-        routes: [
-            { 'name': 'Camera' },
-            { 'name': 'Preview' },
-        ]
-    }));
+function OutFocusing({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'OutFocusing'>): ReactElement {
+    const backToPreview = () => {}; // navigation.navigate('Preview', {...route.params});
 
     return (
         <Template btnL={{source: require('../assets/buttons/21.png')}}

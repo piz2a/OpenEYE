@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Template from "./Template";
+import Template from "./templates/Template";
 import {Camera, CameraType, FlashMode} from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from 'expo-media-library';

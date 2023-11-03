@@ -11,6 +11,7 @@ import Complete from "./screens/Complete";
 import OutFocusing from "./screens/OutFocusing";
 import {useFonts} from 'expo-font';
 import { LogBox } from 'react-native';
+import Loading2 from "./screens/Loading2";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -30,6 +31,7 @@ function App(): ReactElement | null {
                 <Stack.Screen name="Camera" component={CameraScreen}/>
                 <Stack.Screen name="Loading" component={Loading}/>
                 <Stack.Screen name="Preview" component={Preview}/>
+                <Stack.Screen name="Loading2" component={Loading2}/>
                 <Stack.Screen name="EyeSelection" component={EyeSelection}/>
                 <Stack.Screen name="OutFocusing" component={OutFocusing}/>
                 <Stack.Screen name="Saving" component={Saving}/>

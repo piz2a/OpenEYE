@@ -2,7 +2,7 @@ import React, {ReactElement, useState} from "react";
 import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Template from "./Template";
+import Template from "./templates/Template";
 import {FaceData, SelectedEyesData} from "../types/FaceData";
 import axios from "axios/index";
 import {apiUrl} from "../Constants";
@@ -67,21 +67,21 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
     const [selectedFaceNum, setSelectedFaceNum] = useState(0);
     const [selectedEyeNumList, setSelectedEyeNumList] = useState<number[]>([]);
 
-    const selectedFaceData = route.params.newAnalysisList
+    const selectedFaceData = route.params.analysisList
         [route.params.selectedEyesData.backgroundNum]
         [selectedFaceNum];
     console.log('selectedFaceData:', JSON.stringify(selectedFaceData));
 
     return (
         <Template mainStyle={{justifyContent: 'space-between', gap: 0}}
-                  btnC={{source: require('../assets/buttons/16.png'), onPress: () => navigation.navigate('OutFocusing')}}>
+                  btnC={{source: require('../assets/buttons/16.png'), onPress: () => navigation.navigate('Preview', route.params)}}>
             <View style={{flex: 1, justifyContent: 'center', marginTop: 40}}>
                 <Text style={styles.title}>눈 선택하기</Text>
             </View>
             <View style={styles.wrapper1}>
                 <View style={styles.wrapper2}>
                     <View style={styles.eyeSelectorScroll}>
-                        {route.params.newAnalysisList.map((faceDataList, index) => {
+                        {route.params.analysisList.map((faceDataList, index) => {
                             const selectedFaceData = faceDataList[selectedFaceNum];
                             return (
                                 <View key={index} style={styles.eyeSelectorLi}>
@@ -97,7 +97,7 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
                     </View>
                 </View>
                 <ScrollView contentContainerStyle={styles.faceSelector} horizontal={true}>
-                    {route.params.newAnalysisList[route.params.selectedEyesData.backgroundNum].map(
+                    {route.params.analysisList[route.params.selectedEyesData.backgroundNum].map(
                         (faceData, index) => <EyesForSelect key={index} faceData={faceData}/>
                     )}
                 </ScrollView>

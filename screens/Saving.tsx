@@ -2,7 +2,7 @@ import React, {ReactElement, useEffect} from "react";
 import {Text} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Template from "./Template";
+import Template from "./templates/Template";
 import {CommonActions} from "@react-navigation/native";
 
 // navigator history에서 삭제시켜야 한다.

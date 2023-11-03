@@ -2,21 +2,21 @@ import React, {ReactElement} from "react";
 import {Image, StyleSheet, Text, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
-import Template from "./Template";
+import Template from "./templates/Template";
 
 function Preview({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Preview'>): ReactElement {
     const bgNum = route.params.selectedEyesData.backgroundNum;
-    const minPeopleCount = Math.min(...route.params.newAnalysisList.map(faceDataList => faceDataList.length));
+    const minPeopleCount = Math.min(...route.params.analysisList.map(faceDataList => faceDataList.length));
     let openPeopleCount = 0;
     for (let j = 0; j < minPeopleCount; j++) {
-        const eyes = route.params.newAnalysisList[bgNum][j].eyes;
+        const eyes = route.params.analysisList[bgNum][j].eyes;
         if (!eyes.left.open || !eyes.right.open) openPeopleCount++;
     }
 
     return (
         <Template btnL={{source: require('../assets/buttons/10.png'), onPress: () => route.params.backToCamera(navigation, route)}}
                   btnC={{source: require('../assets/buttons/9.png'), onPress: () => navigation.navigate('Saving')}}
-                  btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate('EyeSelection', route.params)}}>
+                  btnR={{source: require('../assets/buttons/11.png'), onPress: () => navigation.navigate('Loading2', route.params)}}>
             <Image style={styles.image} source={{uri: /*route.params.uris[0]*/route.params.previewImageUri}}/>
             <Image source={require('../assets/labels/15.png')} style={styles.display}/>
             <Text style={{...styles.text, right: 360 - (260 - 20) / 3}}>

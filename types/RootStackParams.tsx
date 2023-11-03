@@ -7,8 +7,7 @@ interface LoadingParams {
 }
 
 interface PreviewParams extends LoadingParams {
-    uris: string[]
-    newAnalysisList: FaceData[][]
+    analysisList: FaceData[][]
     previewImageUri: string
     selectedEyesData: SelectedEyesData
 }
@@ -17,6 +16,7 @@ export type RootStackParamList = {
     Camera: { directoryUri?: string }
     Loading: LoadingParams
     Preview: PreviewParams
+    Loading2: PreviewParams
     EyeSelection: PreviewParams
     OutFocusing: undefined
     Saving: undefined
