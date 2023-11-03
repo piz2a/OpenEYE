@@ -1,4 +1,4 @@
-import React, {ReactElement, useState} from "react";
+import React, {ReactElement, useEffect, useState} from "react";
 import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {RootStackParamList} from "../types/RootStackParams";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
@@ -24,8 +24,8 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
     console.log('selectedFaceData:', JSON.stringify(selectedFaceData));
 
     const [newImageUri, setNewImageUri] = useState(route.params.previewImageUri);
-    const [previewFaceImageUri, setPreviewFaceImageUri] = useState(
-        selectedFaceData.faceImageUri ? selectedFaceData.faceImageUri : ''
+    const [previewFaceImageUriList, setPreviewFaceImageUriList] = useState(
+        route.params.analysisList[route.params.selectedEyesData.backgroundNum].map(faceData => faceData.faceImageUri)
     );
 
     const setEye = (side: string, eyeNum: number) => {
@@ -38,11 +38,12 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
             ...selectedEyeList.slice(selectedFaceNum + 1)
         ]);
 
+        const originalEye = route.params.analysisList[route.params.selectedEyesData.backgroundNum][selectedFaceNum].eyes[side === 'left' ? 'left' : 'right'];
         const eye = route.params.analysisList[eyeNum][selectedFaceNum].eyes[side === 'left' ? 'left' : 'right'];
         changeEye(
-            route.params.previewImageUri,
+            newImageUri,
             eye.imageUri ? eye.imageUri : '',
-            eye.pos
+            originalEye.pos
         ).then(previewUri => {
             console.log('previewUri:', previewUri);
             setNewImageUri(previewUri);
@@ -51,13 +52,19 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
                 previewUri,
                 route.params.analysisList[route.params.selectedEyesData.backgroundNum][selectedFaceNum].face,
                 'editCropImage.jpg'
-            ).then(newPreviewFaceUri => setPreviewFaceImageUri(newPreviewFaceUri));
+            ).then(newPreviewFaceUri => setPreviewFaceImageUriList([
+                ...previewFaceImageUriList.slice(0, selectedFaceNum),
+                newPreviewFaceUri,
+                ...previewFaceImageUriList.slice(selectedFaceNum + 1)
+            ]));
         });
     };
 
     const saveChanges = () => {
         navigation.navigate('Preview', {...route.params, previewImageUri: newImageUri});
     };
+
+    useEffect(() => {}, [previewFaceImageUriList])
 
     return (
         <Template mainStyle={{justifyContent: 'space-between', gap: 0}}
@@ -82,7 +89,7 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
                         ))}
                     </View>
                     <View style={styles.previewImageWrapper}>
-                        <Image style={styles.faceImage} source={{uri: previewFaceImageUri}}/>
+                        <Image style={styles.faceImage} source={{uri: previewFaceImageUriList[selectedFaceNum]}}/>
                     </View>
                 </View>
                 <ScrollView contentContainerStyle={styles.faceSelector} horizontal={true}>
@@ -181,24 +188,23 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: "row",
         justifyContent: "center",
-        backgroundColor: "yellow",
         height: 140,
         paddingBottom: 10,
     },
     eyesForSelect: {
         width: 120,
-        height: 120,
+        height: 128,
         paddingBottom: 10,
     },
     border: {
         borderColor: "white",
-        borderWidth: 1,
+        borderWidth: 2,
         borderRadius: 6,
     },
     borderSelected: {
         borderColor: "#2B1F45",
-        borderWidth: 3,
-        borderRadius: 6,
+        borderWidth: 4,
+        borderRadius: 8,
     },
     backButtonWrapper: {
         position: 'absolute',

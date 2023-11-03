@@ -7,7 +7,7 @@ import Template from "./templates/Template";
 function Complete({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Complete'>): ReactElement {
     return (
         <Template btnC={{source: require('../assets/buttons/16.png'), onPress: () => route.params.backToCamera(navigation, route)}}>
-            <Text style={{color: "#fff", fontFamily: 'Pretendard-Bold', fontSize: 25}}>저장이 완료되었습니다</Text>
+            <Text style={{color: "#2B1F45", fontFamily: 'Pretendard-Bold', fontSize: 25}}>저장이 완료되었습니다</Text>
         </Template>
     );
 }

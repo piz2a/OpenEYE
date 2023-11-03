@@ -2,9 +2,8 @@ import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {
     Alert,
     Animated,
-    BackHandler,
     Easing,
-    GestureResponderEvent,
+    GestureResponderEvent, Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -141,14 +140,24 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
 
     const orientationRef = useRef(Orientation.PORTRAIT_UP);
 
+    const [infoVisible, setInfoVisible] = useState(false);
+
     // const windowWidth = Dimensions.get('window').width;
     // const windowHeight = Dimensions.get('window').height;
 
-    useEffect(() => {
-        if (!permission?.granted) requestPermission();
-    }, [permission]);
+    function InfoLayer() {
+        return (
+            <View style={{position: 'absolute', top: 0, left: 0, zIndex: 10}}>
+                <Image source={require("../assets/dialogs/info.png")} style={{width: 360, height: 780}}/>
+                <TouchableOpacity activeOpacity={1} onPress={() => setInfoVisible(false)} style={styles.backButtonWrapper}>
+                    <Image source={require('../assets/buttons/8.png')} style={{width: 112 / 3, height: 112 / 3}}/>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
-    useEffect(() => {
+    /*
+    ScreenOrientation.unlockAsync().then(() => {
         ScreenOrientation.addOrientationChangeListener(
             (event) => {
                 orientationRef.current = event.orientationInfo.orientation;
@@ -164,7 +173,14 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
                 }
             }
         );
+    });
+     */
 
+    useEffect(() => {
+        if (!permission?.granted) requestPermission();
+    }, [permission]);
+
+    useEffect(() => {
         (async () => {
             const { status } = await MediaLibrary.requestPermissionsAsync();//Permissions.askAsync(Permissions.MEDIA_LIBRARY);
             if (status === 'denied') {
@@ -211,7 +227,7 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
     const toggleCameraType = () => setType(current => (current === CameraType.back ? CameraType.front : CameraType.back));
 
     return (
-        <Template btnL={{source: require('../assets/buttons/info.png')}}
+        <Template btnL={{source: require('../assets/buttons/info.png'), onPress: () => setInfoVisible(true)}}
                   btnC={{source: require('../assets/buttons/5.png'), onPress: () => {
                       if (!taking) takePicture();
                   }}}
@@ -226,6 +242,7 @@ function CameraScreen({ navigation, route }: NativeStackScreenProps<RootStackPar
                     flashMode={flashButton ? FlashMode.on : FlashMode.off}/>
             <TopButtonWrapper {...{orientationButton, setOrientationButton, flashButton, setFlashButton, timerButton, setTimerButton}}/>
             {timerNum !== null ? <TimerNum timerNum={timerNum}/> : <></>}
+            {infoVisible ? <InfoLayer/> : <></>}
             {/*<Text style={{color: "#f00"}}>{windowWidth} {windowHeight}</Text>*/}
             {
                 /*
@@ -270,6 +287,11 @@ const styles = StyleSheet.create({
         fontFamily: 'Pretendard-Bold',
         fontSize: 100,
         color: "#fff",
+    },
+    backButtonWrapper: {
+        position: 'absolute',
+        left: (120 - 56) / 3,
+        top: (160 - 56) / 3,
     },
 });
 
