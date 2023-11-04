@@ -21,9 +21,7 @@ function App(): ReactElement | null {
         'Pretendard-Regular': require('./assets/fonts/Pretendard-Regular.otf'),
     });
 
-    LogBox.ignoreLogs([
-        'Non-serializable values were found in the navigation state',
-    ]);
+    LogBox.ignoreAllLogs();
 
     return (
         <NavigationContainer>
