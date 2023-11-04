@@ -15,7 +15,7 @@ import Template from "./templates/Template";
 import {Camera, CameraType, FlashMode} from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from 'expo-media-library';
-import * as ScreenOrientation from 'expo-screen-orientation';
+// import * as ScreenOrientation from 'expo-screen-orientation';
 import {Orientation} from 'expo-screen-orientation';
 import {CommonActions} from "@react-navigation/native";
 

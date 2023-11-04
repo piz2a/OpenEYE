@@ -88,9 +88,9 @@ function EyeSelection({ navigation, route }: NativeStackScreenProps<RootStackPar
                             </View>
                         ))}
                     </View>
-                    <View style={styles.previewImageWrapper}>
+                    {/*<View style={styles.previewImageWrapper}>
                         <Image style={styles.faceImage} source={{uri: previewFaceImageUriList[selectedFaceNum]}}/>
-                    </View>
+                    </View>*/}
                 </View>
                 <ScrollView contentContainerStyle={styles.faceSelector} horizontal={true}>
                     {route.params.analysisList[route.params.selectedEyesData.backgroundNum].map(
@@ -166,7 +166,8 @@ const styles = StyleSheet.create({
     eyeSelectorLi: {
         flex: 1,
         flexDirection: "row",
-        justifyContent: "space-between",
+        justifyContent: "space-evenly",
+        gap: 10,
         margin: 10,
     },
     eyeTouchable: {
