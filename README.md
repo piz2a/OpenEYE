@@ -2,6 +2,28 @@
 단체사진에서 감은 눈을 뜨게 만드는 모바일 앱
 
 2023 전국 고등학교 소프트웨어 경진대회 동상 수상작<br>경기북과학고 SA팀 (안지호, 고정윤, 박건욱, 신희찬)
+
+### 앱 동작 화면
+![image](https://github.com/piz2a/OpenEYE/assets/43025513/20e0c381-c4de-4be9-b13d-612bb9c0df80)
+
+### Frameworks
 - App made with React Native
-- API server made with Flask
-- Model used: retinaface, mediapipe
+- API server made with Flask ([Github](https://github.com/hichan0310/OpenEYE_api_server))
+- Model used: retinaface, mediapipe ([Github](https://github.com/fixed0301/OpenEYE-my))
+
+### 개발 동기
+우리는 많은 상황 속에서 단체 사진을 찍는다. 단체 사진은 많은 사람이 사진을 찍는 그 특성상, 사진 속에서 눈을 감는 등의 상황이 더 잘 일어나 만족할 만한 결과물을 얻어내기가 쉽자 않다.
+
+이를 효율적으로 만들기 위해 사진을 여러 번 찍어 한 사진에서 감은 눈을 다른 사진의 뜬 눈으로 덮는, 완벽한 사진을 돌려주는 스마트폰 앱을 제작하였다.
+
+### 기존과의 차별점
+기존의 ExGAN을 통해서 눈을 뜨게 합성하는 방법은 이미 눈 데이터가 있는 사람만 눈 합성이 가능하다. 이는 미리 확보된 사람별 눈 데이터가 없는 상황인 단체사진 보정에는 적합하지 않다.
+
+따라서 기존 데이터가 필요 없는 본 방법을 이용하였다. 사진을 연속해서 여러 장 촬영한 뒤 찍은 사진들에서 해당하는 사람의 뜬 눈을 찾아 붙이는 이 방법은 처음 찍는 사람도 쉽게 이용할 수 있을 뿐더러, 연산 시간 또한 매우 감소하였다.
+
+### 주요 기능 소개
+- 서버: CNN 모델로 사진에서 눈을 감을 사람을 탐지한다. 이후 해당 사람이 눈을 감지 않은 사진에서 눈을 떼어 눈을 감을 사진에다가 붙이는 식으로 편집한다. 서버를 API로 만들어 앱과 연동한다.
+- 스마트폰 앱: 사용자의 요청과 사진을 받아서 서버에 전달한다. 이후 서버에서의 결과물을 사용자에게 전달한다.
+
+### 시스템 구조도
+![image](https://github.com/piz2a/OpenEYE/assets/43025513/20d7045e-fb2e-450f-b06d-62299b7241c3)
